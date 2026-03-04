@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>OpenCV + MCP Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-zinc-950 text-zinc-200 p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-10 flex justify-between items-center border-b border-zinc-800 pb-4">
+            <h1 class="text-xl font-mono text-blue-500">SYSTEM.VISION_MCP_v1.5</h1>
+            <span class="text-xs bg-green-900 text-green-300 px-2 py-1 rounded">LIVE ON RAILWAY</span>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="space-y-6">
+                <section class="bg-zinc-900 p-5 rounded-lg border border-zinc-800">
+                    <h2 class="text-sm font-bold mb-4 text-zinc-400 uppercase tracking-widest">Control de Entrada</h2>
+                    <label class="text-xs">Seleccionar Imagen de Muestra:</label>
+                    <select id="fileSelect" class="w-full bg-zinc-800 p-3 rounded mt-1 border border-zinc-700 outline-none focus:border-blue-500">
+                        {% for file in files %}
+                        <option value="{{ file }}">{{ file }}</option>
+                        {% endfor %}
+                    </select>
+                </section>
+
+                <section class="bg-zinc-900 p-5 rounded-lg border border-zinc-800">
+                    <h2 class="text-sm font-bold mb-4 text-zinc-400 uppercase tracking-widest">Asistente IA</h2>
+                    <textarea id="chatInput" placeholder="Ej: 'Aplica un desenfoque sutil' o 'Sube un poco el contraste'..." 
+                              class="w-full bg-zinc-800 p-3 rounded h-32 text-sm border border-zinc-700 outline-none focus:border-blue-500"></textarea>
+                    <button onclick="process()" id="btn" class="w-full bg-blue-700 hover:bg-blue-600 mt-4 py-3 rounded-md font-bold transition-all transform active:scale-95">
+                        EJECUTAR PROCESAMIENTO
+                    </button>
+                </section>
+            </div>
+
+            <div class="lg:col-span-2">
+                <div id="loading" class="hidden text-center py-20 text-blue-500 font-mono animate-pulse">PROCESANDO MATRIZ...</div>
+                
+                <div id="canvas" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-zinc-900 p-2 rounded border border-zinc-800">
+                        <p class="text-[10px] text-zinc-500 mb-2 font-mono">SOURCE_IMAGE</p>
+                        <img id="imgOrig" src="" class="w-full grayscale hover:grayscale-0 transition duration-500">
+                    </div>
+                    <div class="bg-zinc-900 p-2 rounded border border-blue-900 shadow-[0_0_15px_rgba(30,58,138,0.3)]">
+                        <p class="text-[10px] text-blue-500 mb-2 font-mono">PROCESSED_RESULT (RAM_ONLY)</p>
+                        <img id="imgProc" src="" class="w-full">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function process() {
+            const btn = document.getElementById('btn');
+            const canvas = document.getElementById('canvas');
+            const loading = document.getElementById('loading');
+            
+            btn.disabled = true;
+            loading.classList.remove('hidden');
+            canvas.classList.add('hidden');
+
+            try {
+                const res = await fetch('/ask-ai', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        prompt: document.getElementById('chatInput').value,
+                        filename: document.getElementById('fileSelect').value
+                    })
+                });
+                const data = await res.json();
+                
+                document.getElementById('imgOrig').src = `/samples/${data.original}`;
+                document.getElementById('imgProc').src = data.processed_b64;
+                loading.classList.add('hidden');
+                canvas.classList.remove('hidden');
+            } catch (e) {
+                alert("Error de conexión");
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
