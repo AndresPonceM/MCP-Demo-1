@@ -38,7 +38,7 @@ def apply_vision_tool(filename: str, action: str, params_json: str) -> str:
         
     return f"data:image/png;base64,{img_to_base64(res)}"
 
-app.mount("/sse", mcp.get_asgi_app())
+app.mount("/sse", mcp.asgi_app)
 
 # --- RUTAS WEB ---
 @app.get("/", response_class=HTMLResponse)
