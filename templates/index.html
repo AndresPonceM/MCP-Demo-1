@@ -72,7 +72,7 @@
                 });
                 const data = await res.json();
                 
-                document.getElementById('imgOrig').src = `/samples/${data.original}`;
+                document.getElementById('imgOrig').src = `/image_samples/${data.original}`;
                 document.getElementById('imgProc').src = data.processed_b64;
                 loading.classList.add('hidden');
                 canvas.classList.remove('hidden');
