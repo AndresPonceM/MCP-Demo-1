@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from mcp.server.fastmcp import FastMCP
-import opencv_functions  # Importamos tu script exacto
+from core import opencv_functions  # Importamos tu script exacto
 
 app = FastAPI()
 mcp = FastMCP("VisionAgent")
