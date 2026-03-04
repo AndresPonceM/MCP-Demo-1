@@ -13,7 +13,7 @@ templates = Jinja2Templates(directory="templates")
 # Configuración de rutas
 SAMPLES_DIR = "image_samples"
 os.makedirs(SAMPLES_DIR, exist_ok=True)
-app.mount("/samples", StaticFiles(directory=SAMPLES_DIR), name="samples")
+app.mount("/image_samples", StaticFiles(directory=SAMPLES_DIR), name="samples")
 
 HF_API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3"
 HF_TOKEN = os.getenv("HF_TOKEN")
