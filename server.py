@@ -19,7 +19,7 @@ app.mount("/image_samples", StaticFiles(directory=SAMPLES_DIR), name="image_samp
 
 # Cambiamos a Zephyr o Mistral v0.2 que son más estables en la API gratuita
 # Este modelo es el estándar de oro para la API gratuita de Hugging Face
-HF_API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-v0.1"
+HF_API_URL = "https://api-inference.huggingface.co/models/microsoft/Phi-3-mini-4k-instruct"
 HF_TOKEN = os.getenv("HF_TOKEN")
 
 # PRUEBA DE ARRANQUE: Verás esto en los logs de Railway
