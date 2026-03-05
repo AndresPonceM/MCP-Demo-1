@@ -8,7 +8,7 @@
 <body class="bg-zinc-950 text-zinc-200 p-8">
     <div class="max-w-6xl mx-auto">
         <header class="mb-10 flex justify-between items-center border-b border-zinc-800 pb-4">
-            <h1 class="text-xl font-mono text-blue-500">SYSTEM.VISION_MCP_v1.5</h1>
+            <h1 class="text-xl font-mono text-blue-500">Demo Manipulación Imágenes con IA + Gemini</h1>
             <span class="text-xs bg-green-900 text-green-300 px-2 py-1 rounded">LIVE ON RAILWAY</span>
         </header>
 
@@ -16,8 +16,8 @@
             <div class="space-y-6">
                 <section class="bg-zinc-900 p-5 rounded-lg border border-zinc-800">
                     <h2 class="text-sm font-bold mb-4 text-zinc-400 uppercase tracking-widest">Control de Entrada</h2>
-                    <label class="text-xs">Seleccionar Imagen de Muestra:</label>
-                    <select id="fileSelect" onchange="updatePreview()" class="w-full bg-zinc-800 p-3 rounded mt-1 border border-zinc-700 outline-none focus:border-blue-500">
+                    <label class="text-xs text-zinc-500">Seleccionar Imagen de Muestra:</label>
+                    <select id="fileSelect" onchange="updatePreview()" class="w-full bg-zinc-800 p-3 rounded mt-1 border border-zinc-700 outline-none focus:border-blue-500 transition-colors">
                         {% for file in files %}
                         <option value="{{ file }}">{{ file }}</option>
                         {% endfor %}
@@ -25,26 +25,30 @@
                 </section>
 
                 <section class="bg-zinc-900 p-5 rounded-lg border border-zinc-800">
-                    <h2 class="text-sm font-bold mb-4 text-zinc-400 uppercase tracking-widest">Asistente IA</h2>
-                    <textarea id="chatInput" placeholder="Ej: 'Aplica un desenfoque'..." 
-                              class="w-full bg-zinc-800 p-3 rounded h-32 text-sm border border-zinc-700 outline-none focus:border-blue-500"></textarea>
-                    <button onclick="process()" id="btn" class="w-full bg-blue-700 hover:bg-blue-600 mt-4 py-3 rounded-md font-bold transition-all transform active:scale-95">
-                        EJECUTAR PROCESAMIENTO
+                    <h2 class="text-sm font-bold mb-4 text-zinc-400 uppercase tracking-widest">Asistente IA (Gemini)</h2>
+                    <textarea id="chatInput" placeholder="Ej: 'Aumenta el contraste y el brillo' o 'Pon la imagen borrosa'..." 
+                              class="w-full bg-zinc-800 p-3 rounded h-32 text-sm border border-zinc-700 outline-none focus:border-blue-500 transition-colors resize-none"></textarea>
+                    <button onclick="process()" id="btn" class="w-full bg-blue-700 hover:bg-blue-600 mt-4 py-3 rounded-md font-bold transition-all transform active:scale-95 flex justify-center items-center gap-2">
+                        <span>EJECUTAR PROCESAMIENTO</span>
                     </button>
                 </section>
             </div>
 
             <div class="lg:col-span-2">
-                <div id="loading" class="hidden text-center py-20 text-blue-500 font-mono animate-pulse">PROCESANDO MATRIZ...</div>
+                <div id="loading" class="hidden text-center py-4 text-blue-500 font-mono animate-pulse text-sm">
+                    🚀 GEMINI PROCESANDO MATRIZ...
+                </div>
                 
                 <div id="canvas" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-zinc-900 p-2 rounded border border-zinc-800">
-                        <p class="text-[10px] text-zinc-500 mb-2 font-mono">SOURCE_IMAGE</p>
-                        <img id="imgOrig" src="" class="w-full grayscale hover:grayscale-0 transition duration-500">
+                        <p class="text-[10px] text-zinc-500 mb-2 font-mono uppercase">Imagen Original</p>
+                        <img id="imgOrig" src="" class="w-full rounded border border-zinc-800">
                     </div>
-                    <div class="bg-zinc-900 p-2 rounded border border-blue-900 shadow-[0_0_15px_rgba(30,58,138,0.3)]">
-                        <p class="text-[10px] text-blue-500 mb-2 font-mono">PROCESSED_RESULT</p>
-                        <img id="imgProc" src="https://placehold.co/400x300/18181b/3b82f6?text=Esperando+IA" class="w-full">
+                    <div class="bg-zinc-900 p-2 rounded border border-blue-900 shadow-[0_0_15px_rgba(30,58,138,0.2)]">
+                        <p class="text-[10px] text-blue-500 mb-2 font-mono uppercase">Resultado de la IA</p>
+                        <div class="relative min-h-[200px] flex items-center justify-center bg-zinc-950 rounded overflow-hidden">
+                            <img id="imgProc" src="https://placehold.co/400x300/18181b/3b82f6?text=Esperando+Instrucciones" class="w-full transition-opacity duration-300">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -52,6 +56,7 @@
     </div>
 
     <script>
+        // Actualiza la miniatura de la izquierda al cambiar el selector
         function updatePreview() {
             const file = document.getElementById('fileSelect').value;
             if(file) {
@@ -59,40 +64,57 @@
             }
         }
 
-        // Cargar preview inicial
+        // Cargar vista previa al iniciar la página
         window.onload = updatePreview;
 
         async function process() {
             const btn = document.getElementById('btn');
             const loading = document.getElementById('loading');
             const chatInput = document.getElementById('chatInput');
+            const imgProc = document.getElementById('imgProc');
+            const fileSelect = document.getElementById('fileSelect');
             
-            if(!chatInput.value) return alert("Escribe algo para la IA");
+            if(!chatInput.value.trim()) return alert("Por favor, escribe una instrucción para la IA.");
 
+            // 1. Feedback visual inmediato: Bloqueamos UI y reseteamos imagen
             btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
             loading.classList.remove('hidden');
+            imgProc.style.opacity = "0.5";
+            imgProc.src = "https://placehold.co/400x300/18181b/3b82f6?text=IA+Pensando...";
 
             try {
-                const res = await fetch('/ask-ai', {
+                const response = await fetch('/ask-ai', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         prompt: chatInput.value,
-                        filename: document.getElementById('fileSelect').value
+                        filename: fileSelect.value
                     })
                 });
-                const data = await res.json();
+
+                if (!response.ok) throw new Error("Error en la respuesta del servidor");
+
+                const data = await response.json();
                 
                 if (data.error) {
-                    alert(data.error);
+                    alert("Error de la IA: " + data.error);
+                    imgProc.src = "https://placehold.co/400x300/18181b/ef4444?text=Error+en+Procesamiento";
                 } else {
-                    document.getElementById('imgProc').src = data.processed_b64;
+                    // 2. Éxito: Mostramos la imagen procesada
+                    imgProc.src = data.processed_b64;
+                    imgProc.style.opacity = "1";
+                    console.log("Acción ejecutada:", data.details);
                 }
-            } catch (e) {
-                alert("Error de conexión");
+            } catch (error) {
+                console.error("Error en la petición:", error);
+                alert("Hubo un fallo en la conexión con el servidor.");
+                imgProc.src = "https://placehold.co/400x300/18181b/ef4444?text=Fallo+de+Conexion";
             } finally {
+                // 3. Restauramos la UI
                 loading.classList.add('hidden');
                 btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         }
     </script>
