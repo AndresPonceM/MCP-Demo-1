@@ -65,11 +65,11 @@ async def ask_ai(data: dict = Body(...)):
         }
 
     except Exception as e:
-        print(f"Error con Gemini: {e}")
-        # Fallback local por si acaso falla la cuota gratuita
-        res_img = cv2.GaussianBlur(img, (21, 21), 0)
-        return {
-            "original": fname, 
-            "processed_b64": f"data:image/png;base64,{img_to_base64(res_img)}",
-            "details": {"action": "blur (emergency)", "info": "Gemini API Limit reached"}
-        }
+            print(f"Error detectado: {e}")
+            # Devolvemos un mensaje claro que el frontend usará para generar la imagen de error
+            return {
+                "original": fname, 
+                "processed_b64": None, # Indicamos que no hay imagen
+                "error_message": "revisar estado de la api",
+                "details": str(e)
+            }

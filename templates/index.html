@@ -67,54 +67,43 @@
         // Cargar vista previa al iniciar la página
         window.onload = updatePreview;
 
-        async function process() {
+async function process() {
             const btn = document.getElementById('btn');
             const loading = document.getElementById('loading');
             const chatInput = document.getElementById('chatInput');
             const imgProc = document.getElementById('imgProc');
-            const fileSelect = document.getElementById('fileSelect');
             
-            if(!chatInput.value.trim()) return alert("Por favor, escribe una instrucción para la IA.");
+            if(!chatInput.value.trim()) return alert("Escribe algo para la IA");
 
-            // 1. Feedback visual inmediato: Bloqueamos UI y reseteamos imagen
             btn.disabled = true;
-            btn.classList.add('opacity-50', 'cursor-not-allowed');
             loading.classList.remove('hidden');
-            imgProc.style.opacity = "0.5";
-            imgProc.src = "https://placehold.co/400x300/18181b/3b82f6?text=IA+Pensando...";
+            // Estado de carga visual
+            imgProc.src = "https://placehold.co/400x300/18181b/3b82f6?text=Procesando...";
 
             try {
-                const response = await fetch('/ask-ai', {
+                const res = await fetch('/ask-ai', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         prompt: chatInput.value,
-                        filename: fileSelect.value
+                        filename: document.getElementById('fileSelect').value
                     })
                 });
-
-                if (!response.ok) throw new Error("Error en la respuesta del servidor");
-
-                const data = await response.json();
+                const data = await res.json();
                 
-                if (data.error) {
-                    alert("Error de la IA: " + data.error);
-                    imgProc.src = "https://placehold.co/400x300/18181b/ef4444?text=Error+en+Procesamiento";
+                // Si el servidor detectó un error en la API (nuestro nuevo formato)
+                if (data.error_message || !data.processed_b64) {
+                    const msg = data.error_message || "Error desconocido";
+                    // Mostramos el mensaje directamente en el lugar de la imagen
+                    imgProc.src = `https://placehold.co/400x300/450a0a/ef4444?text=${encodeURIComponent(msg)}`;
                 } else {
-                    // 2. Éxito: Mostramos la imagen procesada
-                    imgProc.src = data.processed_b64;
-                    imgProc.style.opacity = "1";
-                    console.log("Acción ejecutada:", data.details);
+                    document.getElementById('imgProc').src = data.processed_b64;
                 }
-            } catch (error) {
-                console.error("Error en la petición:", error);
-                alert("Hubo un fallo en la conexión con el servidor.");
-                imgProc.src = "https://placehold.co/400x300/18181b/ef4444?text=Fallo+de+Conexion";
+            } catch (e) {
+                imgProc.src = "https://placehold.co/400x300/450a0a/ef4444?text=Error+de+Conexion";
             } finally {
-                // 3. Restauramos la UI
                 loading.classList.add('hidden');
                 btn.disabled = false;
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         }
     </script>
